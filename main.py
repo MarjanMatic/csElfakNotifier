@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from dotenv import load_dotenv
 import tomllib
+import json
 import time
 import os
 
@@ -10,7 +11,10 @@ def main():
     config = initConfig()
     driver = initDriver()
     login(driver)
-    find_last_courses_posts(driver, config["course_ids"])
+
+    if os.path.isfile("./last_check.json") == False:
+        create_last_check_file(driver, config["course_ids"])
+
     time.sleep(1)
     driver.quit()
 
@@ -49,18 +53,31 @@ def enter_login_info(driver, element_name, credential):
     login_element.send_keys(Keys.RETURN)
     time.sleep(1.5)
 
+def create_last_check_file(driver, course_ids):
+    checkJson = find_last_courses_posts(driver, course_ids)
+    with open("last_check.json", "w") as f:
+        json.dump(checkJson, f)
+
 def find_last_courses_posts(driver, course_ids):
+    checkJson = {
+        "timestamp": time.time(),
+        "courses": {}
+    }
+
     for id in course_ids:
         driver.get(f"https://cs.elfak.ni.ac.rs/nastava/mod/forum/search.php?id={id}&datefrom=1577833200")
         page_content = driver.find_element(By.ID, "page-content")
-        results = page_content.find_element(By.TAG_NAME, "h3")
-        if results.text.find(":") == -1:
-            print("No results")
+        results = page_content.find_element(By.TAG_NAME, "h3").text
+        if results.find(":") == -1:
+            checkJson["courses"][id] = None
             continue
 
         article = driver.find_element(By.TAG_NAME, "article")
-        print(article.text)
+        permalink = article.find_element(By.PARTIAL_LINK_TEXT, "Permalink")
+        checkJson["courses"][id] = permalink.get_attribute("href")
         time.sleep(1)
+    
+    return checkJson
 
 load_dotenv()
 main()
