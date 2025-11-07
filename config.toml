@@ -1,0 +1,8 @@
+# Ids of tracked courses
+course_ids = [
+	11,
+	139,
+	146,
+	3,
+	2
+]
