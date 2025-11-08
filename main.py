@@ -67,6 +67,11 @@ def create_last_check_file(driver, course_ids):
     with open("last_check.json", "w") as f:
         json.dump(checkJson, f)
 
+def has_search_results(driver):
+    page_content = driver.find_element(By.ID, "page-content")
+    result = page_content.find_element(By.TAG_NAME, "h3").text
+    return result.find(":") == -1
+
 def find_last_courses_posts(driver, course_ids):
     checkJson = {
         "timestamp": int(time.time()),
@@ -75,17 +80,15 @@ def find_last_courses_posts(driver, course_ids):
 
     for id in course_ids:
         driver.get(f"https://cs.elfak.ni.ac.rs/nastava/mod/forum/search.php?id={id}&datefrom=1577833200")
-        page_content = driver.find_element(By.ID, "page-content")
-        results = page_content.find_element(By.TAG_NAME, "h3").text
-        if results.find(":") == -1:
-            checkJson["courses"][id] = None
-            continue
 
-        article = driver.find_element(By.TAG_NAME, "article")
-        permalink = article.find_element(By.PARTIAL_LINK_TEXT, "Permalink")
-        checkJson["courses"][id] = permalink.get_attribute("href")
+        checkJson["courses"][id] = None
+        if has_search_results(driver):
+            article = driver.find_element(By.TAG_NAME, "article")
+            permalink = article.find_element(By.PARTIAL_LINK_TEXT, "Permalink")
+            checkJson["courses"][id] = permalink.get_attribute("href")
+        
         time.sleep(1)
-    
+
     return checkJson
 
 load_dotenv()
