@@ -60,7 +60,7 @@ def create_last_check_file(driver, course_ids):
 
 def find_last_courses_posts(driver, course_ids):
     checkJson = {
-        "timestamp": time.time(),
+        "timestamp": int(time.time()),
         "courses": {}
     }
 
