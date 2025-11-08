@@ -10,6 +10,8 @@ import os
 def main():
     config = initConfig()
     driver = initDriver()
+
+    handle_privacy_error(driver)
     login(driver)
 
     if os.path.isfile("./last_check.json") == False:
@@ -17,6 +19,13 @@ def main():
 
     time.sleep(1)
     driver.quit()
+
+def handle_privacy_error(driver):
+    if driver.title == "Privacy error":
+        driver.find_element(By.ID, "details-button").click()
+        proceed_link = driver.find_element(By.ID, "final-paragraph").find_element(By.TAG_NAME, "a")
+        proceed_link.click()
+
 
 def initConfig():
     with open("config.toml", "rb") as f:
