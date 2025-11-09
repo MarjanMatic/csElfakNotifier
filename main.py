@@ -11,7 +11,6 @@ def main():
     config = initConfig()
     driver = initDriver()
 
-    handle_privacy_error(driver)
     login(driver)
 
     if os.path.isfile("./last_check.json") == False:
@@ -45,6 +44,7 @@ def initDriver():
     return driver
 
 def login(driver):
+    handle_privacy_error(driver)
     login_link = driver.find_element(By.LINK_TEXT, "Log in")
     login_link.click()
 
