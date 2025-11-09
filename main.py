@@ -78,6 +78,9 @@ def has_search_results(driver) -> bool:
     result = page_content.find_element(By.TAG_NAME, "h3").text
     return result.find(":") != -1
 
+def search_course_forum(driver, id, timestamp = 1577833200):
+    driver.get(f"https://cs.elfak.ni.ac.rs/nastava/mod/forum/search.php?id={id}&datefrom={timestamp}")
+
 def find_last_courses_posts(driver, course_ids):
     checkJson = {
         "timestamp": int(time.time()),
@@ -85,8 +88,7 @@ def find_last_courses_posts(driver, course_ids):
     }
 
     for id in course_ids:
-        driver.get(f"https://cs.elfak.ni.ac.rs/nastava/mod/forum/search.php?id={id}&datefrom=1577833200")
-
+        search_course_forum(driver, id)
         checkJson["courses"][id] = None
         if has_search_results(driver):
             article = driver.find_element(By.TAG_NAME, "article")
@@ -100,8 +102,7 @@ def find_last_courses_posts(driver, course_ids):
 def notify_new_courses_posts(driver, last_check):
     new_timestamp = int(time.time())
     for id in last_check["courses"]:
-        driver.get(f"https://cs.elfak.ni.ac.rs/nastava/mod/forum/search.php?id={id}&datefrom={last_check["timestamp"]}")
-
+        search_course_forum(driver, id, last_check["timestamp"])
         if has_search_results(driver):
             articles = driver.find_elements(By.TAG_NAME, "article")
             new_href = notify_new_posts(articles, last_check["courses"][id])
