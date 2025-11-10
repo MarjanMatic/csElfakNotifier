@@ -3,23 +3,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from dotenv import load_dotenv
 import tomllib
-import json
 import time
 import os
 
-LAST_CHECK_FILENAME = "last_check.json"
+import save_file
 
 def main():
     config = initConfig()
     driver = initDriver()
-
     login(driver)
 
-    last_check, created = get_last_check_json(driver, config["course_ids"])
+    save_object, created = save_file.get(config["course_ids"])
     if not created:
-        new_check = notify_new_courses_posts(driver, last_check)
-        with open(LAST_CHECK_FILENAME, "w") as f:
-            json.dump(new_check, f)
+        new_save_object = notify_new_courses_posts(driver, save_object)
+        save_file.save(new_save_object)
 
     time.sleep(1)
     driver.quit()
@@ -67,30 +64,6 @@ def enter_login_info(driver, element_name, credential):
     login_element.send_keys(Keys.RETURN)
     time.sleep(1.5)
 
-def get_last_check_json(driver, course_ids) -> tuple[bool, dict]:
-    if os.path.isfile(LAST_CHECK_FILENAME) == False:
-        last_check = create_last_check_file(driver, course_ids)
-        return last_check, True
-    else:
-        with open(LAST_CHECK_FILENAME, "r") as f:
-            last_check = json.load(f)
-        return last_check, False
-
-def new_check_create():
-    return {
-        "timestamp": int(time.time()),
-        "courses": {}
-    }
-
-def create_last_check_file(driver, course_ids):
-    check_json = new_check_create()
-    for id in course_ids:
-        check_json["courses"][id] = None
-    
-    with open(LAST_CHECK_FILENAME, "w") as f:
-        json.dump(check_json, f)
-    return check_json
-
 def has_search_results(driver) -> bool:
     page_content = driver.find_element(By.ID, "page-content")
     result = page_content.find_element(By.TAG_NAME, "h3").text
@@ -99,20 +72,20 @@ def has_search_results(driver) -> bool:
 def search_course_forum(driver, id, timestamp):
     driver.get(f"https://cs.elfak.ni.ac.rs/nastava/mod/forum/search.php?id={id}&datefrom={timestamp}")
 
-def notify_new_courses_posts(driver, last_check):
-    new_check = new_check_create()
-    for id in last_check["courses"]:
-        search_course_forum(driver, id, last_check["timestamp"])
+def notify_new_courses_posts(driver, save_object):
+    new_save_object = save_file.create_save_object()
+    for id in save_object["courses"]:
+        search_course_forum(driver, id, save_object["timestamp"])
         if has_search_results(driver):
             articles = driver.find_elements(By.TAG_NAME, "article")
-            new_href = notify_new_posts(articles, last_check["courses"][id])
-            new_check["courses"][id] = new_href
+            new_href = notify_new_posts(articles, save_object["courses"][id])
+            new_save_object["courses"][id] = new_href
         else:
-            new_check["courses"][id] = None
+            new_save_object["courses"][id] = None
         
         time.sleep(1)
 
-    return new_check
+    return new_save_object
 
 def notify_new_posts(articles, last_href):
     article_stack = find_which_posts_are_new(articles, last_href)

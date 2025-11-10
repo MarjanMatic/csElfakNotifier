@@ -4,3 +4,4 @@
 
 #ignore generated files
 last_check.json
+__pycache__
