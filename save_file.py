@@ -1,3 +1,4 @@
+from tempfile import NamedTemporaryFile
 import json
 import time
 import os
@@ -20,8 +21,19 @@ def get(course_ids) -> tuple[bool, dict]:
         return save_object, False
 
 def save(save_object):
-    with open(SAVE_FILENAME, "w") as f:
-        json.dump(save_object, f)
+    try:
+        with NamedTemporaryFile("w", dir=".", delete=False) as f:
+            json.dump(save_object, f)
+        if os.path.isfile(SAVE_FILENAME):
+            os.replace(f.name, SAVE_FILENAME)
+        else:
+            os.rename(f.name, SAVE_FILENAME)
+
+    except:
+        if f.name != SAVE_FILENAME:
+            os.remove(f.name)
+        raise
+    
 
 def _create_file(course_ids):
     save_object = create_save_object()
