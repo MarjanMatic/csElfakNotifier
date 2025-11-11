@@ -18,7 +18,7 @@ def main():
         new_save_object = notify_new_courses_posts(driver, save_object)
         save_file.save(new_save_object)
 
-    time.sleep(1)
+    logout(driver)
     driver.quit()
 
 def handle_privacy_error(driver):
@@ -67,6 +67,11 @@ def enter_login_info(driver, element_name, credential):
     login_element.send_keys(credential)
     login_element.send_keys(Keys.RETURN)
     time.sleep(1.5)
+
+def logout(driver):
+    usermenu = driver.find_element(By.CLASS_NAME, "usermenu")
+    usermenu.find_element(By.TAG_NAME, "a").click()
+    usermenu.find_element(By.PARTIAL_LINK_TEXT, "Log out").click()
 
 def has_search_results(driver) -> bool:
     page_content = driver.find_element(By.ID, "page-content")
