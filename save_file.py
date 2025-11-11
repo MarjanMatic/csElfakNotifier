@@ -18,6 +18,8 @@ def get(course_ids) -> tuple[bool, dict]:
     else:
         with open(SAVE_FILENAME, "r") as f:
             save_object = json.load(f)
+        
+        save_object = _change_tracked_courses(save_object, course_ids)
         return save_object, False
 
 def save(save_object):
@@ -41,4 +43,17 @@ def _create_file(course_ids):
         save_object["courses"][id] = None
     
     save(save_object)
+    return save_object
+
+def _change_tracked_courses(save_object, course_ids):
+    courses: dict = save_object["courses"]
+    for id in courses.copy():
+        if id not in course_ids:
+            del courses[id]
+    
+    for id in course_ids:
+        if id not in courses:
+            courses[id] = None
+    
+    print(save_object)
     return save_object

@@ -31,6 +31,10 @@ def handle_privacy_error(driver):
 def initConfig():
     with open("config.toml", "rb") as f:
         config = tomllib.load(f)
+    
+    for i in range(len(config["course_ids"])):
+        config["course_ids"][i] = str(config["course_ids"][i])
+    
     return config
 
 def initDriver():
@@ -81,7 +85,7 @@ def notify_new_courses_posts(driver, save_object):
             new_href = notify_new_posts(articles, save_object["courses"][id])
             new_save_object["courses"][id] = new_href
         else:
-            new_save_object["courses"][id] = None
+            new_save_object["courses"][id] = save_object["courses"][id]
         
         time.sleep(1)
 
